@@ -934,7 +934,6 @@ class PhpCron
         switch ($signo) {
             case SIGTERM:
                 // обработка сигнала завершения
-                echo 'X';
                 exit;
                 break;
             case SIGHUP:

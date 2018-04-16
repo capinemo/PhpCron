@@ -73,6 +73,8 @@ $cron->call(function() {
 
 
 
+
+
 //$cron->call(function() {
 //})->cron('15 20 1 3 */2 * 0,4,1');
 
@@ -80,3 +82,28 @@ $cron->call(function() {
 //})->sundays()->mondays()->thursdays()->quarterly()->monthlyOn(3, '1:20:15');
 
 //$cron->start();
+
+
+
+
+
+define('BASE_DIR', __DIR__);
+
+require_once __DIR__ . '/library/PhpCron/PhpCron.php';
+
+$cron = new PhpCron();
+
+//$cron->debugMe();
+$cron->withoutOverlapping();
+$cron->stop();
+
+$cron->exec("php " . __DIR__ . "/run os loadme Users;")->cron('0 30 */2 * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme Clients;")->cron('30 */2 * * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme SummaryByClients;")->cron('0 */12 * * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme ClientObjects;")->cron('0 0 */2 * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme Locations;")->cron('30 */2 * * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme Applications;")->cron('* */2 * * * * *');
+$cron->exec("php " . __DIR__ . "/run os loadme ClientsTimeSheetsLite;")->cron('* */20 * * * * *');
+
+$cron->start();
+
