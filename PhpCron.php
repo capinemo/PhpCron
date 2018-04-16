@@ -105,34 +105,57 @@ class PhpCron
                     $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
                     continue;
                 }
+                
                 $this->schedule[$this->actual_id][$i] = 1;
+                
             }  else if ((preg_match('/^\*\/([0-9]+)$/', $time[$i], $matches))) {
             // Момент единицы времени с определенной приодичностью
                 if ($set_time) {
                     $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
                     continue;
                 }
+                
                 $this->schedule[$this->actual_id][$i] = $matches[1];
-                if ($i != count($time) - 1) $set_time = true;
+                
+                if ($i != count($time) - 1) {
+                    $set_time = true;
+                }
+                
             } else if (preg_match('/^([0-9]{1,2})$/', $time[$i], $matches)) {
             // Конкретный момент времени
                 $this->schedule[$this->actual_id][$i] = [$matches[0]];
-                if ($i != count($time) - 1) $set_time = true;
+                
+                if ($i != count($time) - 1) {
+                    $set_time = true;
+                }
+                
             } else if ((preg_match('/^([0-9,\-]+)$/', $time[$i], $matches))) {
             // Несколько конкретных моментов времени
                 $this->schedule[$this->actual_id][$i] = [];
 
                 foreach (explode(',', $matches[0]) as $value) {
                     if ((preg_match('/^([0-9]{1,2})$/', $value, $matches))) {
-                        if (in_array($value, $this->schedule[$this->actual_id][$i])) continue;
+                        if (in_array($value, $this->schedule[$this->actual_id][$i])) {
+                            continue;
+                        }
+                        
                         array_push($this->schedule[$this->actual_id][$i], $value);
-                        If ($i != count($time) - 1) $set_time = true;
+                        
+                        If ($i != count($time) - 1) {
+                            $set_time = true;
+                        }
                     } else if (preg_match('/^([0-9\-]+)$/', $value, $matches)) {
                         $period = explode('-', $matches[0]);
                         for ($y = $period[0]; $y <= $period[1]; $y++) {
-                            if (in_array($y, $this->schedule[$this->actual_id][$i])) continue;
+                            if (in_array($y, $this->schedule[$this->actual_id][$i])) {
+                                continue;
+                            }
+                            
                             array_push($this->schedule[$this->actual_id][$i], $y);
-                            If ($i != count($time) - 1) $set_time = true;
+                            
+                            If ($i != count($time) - 1) {
+                                $set_time = true;
+                            }
                         }
                     }
                 }
@@ -142,34 +165,65 @@ class PhpCron
         return $this;
     }
 
-    public function everySeconds(): self
+    /**
+     * Run task every second <br />
+     * Analog cron('* * * * * * *')
+     * 
+     * @return self
+     */
+    public final function everySeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 1;
 
         return $this;
     }
 
-    public function everyFiveSeconds(): self
+    /**
+     * Run task every five second <br />
+     * Analog cron('*&#47;5 * * * * * *')
+     * 
+     * @return self
+     */
+    public final function everyFiveSeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 5;
 
         return $this;
     }
 
-    public function everyTenSeconds(): self
+    /**
+     * Run task every ten second <br />
+     * Analog cron('*&#47;10 * * * * * *')
+     * 
+     * @return self
+     */
+    public final function everyTenSeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 10;
 
         return $this;
     }
 
+    /**
+     * Run task every thirty second <br />
+     * Analog cron('*&#47;30 * * * * * *')
+     * 
+     * @return self
+     */
     public function everyThirtySeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 30;
 
         return $this;
     }
-
+    
+    /**
+     * Run task every minute <br />
+     * Analog cron('* *&#47;1 * * * * *') <br />
+     * Analog cron('0 *&#47;1 * * * * *')
+     * 
+     * @return self
+     */
     public function everyMinute(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -177,6 +231,13 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every five minutes <br />
+     * Analog cron('* *&#47;5 * * * * *') <br />
+     * Analog cron('0 *&#47;5 * * * * *')
+     * 
+     * @return self
+     */
     public function everyFiveMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -185,6 +246,13 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every ten minutes <br />
+     * Analog cron('* *&#47;10 * * * * *') <br />
+     * Analog cron('0 *&#47;10 * * * * *')
+     * 
+     * @return self
+     */
     public function everyTenMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -193,6 +261,13 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every thirty minutes <br />
+     * Analog cron('* *&#47;30 * * * * *') <br />
+     * Analog cron('0 *&#47;30 * * * * *')
+     * 
+     * @return self
+     */
     public function everyThirtyMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -201,6 +276,14 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every minutes at certain second <br />
+     * Analog cron('20 * * * * * *')
+     * 
+     * @param integer $sc Seconds
+     * 
+     * @return self
+     */
     public function minutelyAt(int $sc): self
     {
         $this->schedule[$this->actual_id][0] = [(int) $sc];
@@ -208,6 +291,13 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every hour <br />
+     * Analog cron('* * *&#47;1 * * * *') <br />
+     * Analog cron('0 0 *&#47;1 * * * *')
+     * 
+     * @return self
+     */
     public function hourly(): self
     {
             $this->schedule[$this->actual_id][0] = [0];
@@ -216,6 +306,14 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * Run task every hour at certain second and minute <br />
+     * Analog cron('20 15 * * * * *')
+     * 
+     * @param string $mn_sc Minute:Second
+     * 
+     * @return self
+     */
     public function hourlyAt(string $mn_sc): self
     {
         $time = array_reverse(explode(':', $mn_sc));

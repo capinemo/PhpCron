@@ -95,7 +95,7 @@ $cron = new PhpCron();
 
 //$cron->debugMe();
 $cron->withoutOverlapping();
-$cron->stop();
+$cron->stop()->hourly();
 
 $cron->exec("php " . __DIR__ . "/run os loadme Users;")->cron('0 30 */2 * * * *');
 $cron->exec("php " . __DIR__ . "/run os loadme Clients;")->cron('30 */2 * * * * *');
