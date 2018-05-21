@@ -40,6 +40,7 @@ class PhpCron
 {
     private $pcount             =   0;      // Текущее количество запущенных процессов
     private $pid_file_name      =   '/tmp/phpcron.pid';
+    private $restart_block      =   '/tmp/php_cron.blk';
 
     private $start_cron         =   null;   // PhpCron start datetime
     private $stop_cron          =   null;   // PhpCron stop datetime
@@ -63,7 +64,8 @@ class PhpCron
                                         'debug'         => false,               // Флаг отладки
                                         'debug_file'    => '',                  // Если указан файл, вывод идет в файл вместо терминала
                                         'no_double'     => false,               // If task already in the queue, next execution ignore
-
+                                        'child_die_time'=> 60 * 60,             // Время жизни потомка, если его пида нет в списке активных задач
+                                        'isTest'        => false,
                                     ];
 
     public function __construct()
@@ -73,25 +75,30 @@ class PhpCron
     }
 
     /**********         COMMANDS            **********/
+    /**
+     * Set shell command for execution
+     *
+     * @param string $string
+     * @return self
+     */
     public function exec(string $string): self
     {
-        if (!$this->createTask('exec', $string)) {
-            $this->error[] = 'Command EXEC adding fail with' . print_r($string);
-        }
-
+        $this->createTask('exec', $string);
         return $this;
     }
 
     public function call(callable $callback): self
     {
-        if (!$this->createTask('call', $callback)) {
-            $this->error[] = 'Command CALL adding fail with' . print_r($callback);
-        }
-
+        $this->createTask('call', $callback);
         return $this;
     }
 
     /**********         PLANNING            **********/
+    /**
+     * Schedule prepare string
+     * @param string $string
+     * @return self
+     */
     public function cron($string = '* * * * * * *'): self
     {
         $time = explode(' ', $string);
@@ -105,57 +112,34 @@ class PhpCron
                     $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
                     continue;
                 }
-                
                 $this->schedule[$this->actual_id][$i] = 1;
-                
             }  else if ((preg_match('/^\*\/([0-9]+)$/', $time[$i], $matches))) {
             // Момент единицы времени с определенной приодичностью
-                if ($set_time) {
+                /*if ($set_time) {
                     $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
                     continue;
-                }
-                
+                }*/
                 $this->schedule[$this->actual_id][$i] = $matches[1];
-                
-                if ($i != count($time) - 1) {
-                    $set_time = true;
-                }
-                
+                if ($i != count($time) - 1) $set_time = true;
             } else if (preg_match('/^([0-9]{1,2})$/', $time[$i], $matches)) {
             // Конкретный момент времени
                 $this->schedule[$this->actual_id][$i] = [$matches[0]];
-                
-                if ($i != count($time) - 1) {
-                    $set_time = true;
-                }
-                
+                if ($i != count($time) - 1) $set_time = true;
             } else if ((preg_match('/^([0-9,\-]+)$/', $time[$i], $matches))) {
             // Несколько конкретных моментов времени
                 $this->schedule[$this->actual_id][$i] = [];
 
                 foreach (explode(',', $matches[0]) as $value) {
-                    if ((preg_match('/^([0-9]{1,2})$/', $value, $matches))) {
-                        if (in_array($value, $this->schedule[$this->actual_id][$i])) {
-                            continue;
-                        }
-                        
+                    if ((preg_match('/^([0-9]{1,4})$/', $value, $matches))) {
+                        if (in_array($value, $this->schedule[$this->actual_id][$i])) continue;
                         array_push($this->schedule[$this->actual_id][$i], $value);
-                        
-                        If ($i != count($time) - 1) {
-                            $set_time = true;
-                        }
+                        If ($i != count($time) - 1) $set_time = true;
                     } else if (preg_match('/^([0-9\-]+)$/', $value, $matches)) {
                         $period = explode('-', $matches[0]);
                         for ($y = $period[0]; $y <= $period[1]; $y++) {
-                            if (in_array($y, $this->schedule[$this->actual_id][$i])) {
-                                continue;
-                            }
-                            
+                            if (in_array($y, $this->schedule[$this->actual_id][$i])) continue;
                             array_push($this->schedule[$this->actual_id][$i], $y);
-                            
-                            If ($i != count($time) - 1) {
-                                $set_time = true;
-                            }
+                            If ($i != count($time) - 1) $set_time = true;
                         }
                     }
                 }
@@ -165,65 +149,34 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every second <br />
-     * Analog cron('* * * * * * *')
-     * 
-     * @return self
-     */
-    public final function everySeconds(): self
+    public function everySeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 1;
 
         return $this;
     }
 
-    /**
-     * Run task every five second <br />
-     * Analog cron('*&#47;5 * * * * * *')
-     * 
-     * @return self
-     */
-    public final function everyFiveSeconds(): self
+    public function everyFiveSeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 5;
 
         return $this;
     }
 
-    /**
-     * Run task every ten second <br />
-     * Analog cron('*&#47;10 * * * * * *')
-     * 
-     * @return self
-     */
-    public final function everyTenSeconds(): self
+    public function everyTenSeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 10;
 
         return $this;
     }
 
-    /**
-     * Run task every thirty second <br />
-     * Analog cron('*&#47;30 * * * * * *')
-     * 
-     * @return self
-     */
     public function everyThirtySeconds(): self
     {
         $this->schedule[$this->actual_id][0] = 30;
 
         return $this;
     }
-    
-    /**
-     * Run task every minute <br />
-     * Analog cron('* *&#47;1 * * * * *') <br />
-     * Analog cron('0 *&#47;1 * * * * *')
-     * 
-     * @return self
-     */
+
     public function everyMinute(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -231,13 +184,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every five minutes <br />
-     * Analog cron('* *&#47;5 * * * * *') <br />
-     * Analog cron('0 *&#47;5 * * * * *')
-     * 
-     * @return self
-     */
     public function everyFiveMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -246,13 +192,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every ten minutes <br />
-     * Analog cron('* *&#47;10 * * * * *') <br />
-     * Analog cron('0 *&#47;10 * * * * *')
-     * 
-     * @return self
-     */
     public function everyTenMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -261,13 +200,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every thirty minutes <br />
-     * Analog cron('* *&#47;30 * * * * *') <br />
-     * Analog cron('0 *&#47;30 * * * * *')
-     * 
-     * @return self
-     */
     public function everyThirtyMinutes(): self
     {
         $this->schedule[$this->actual_id][0] = [0];
@@ -276,14 +208,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every minutes at certain second <br />
-     * Analog cron('20 * * * * * *')
-     * 
-     * @param integer $sc Seconds
-     * 
-     * @return self
-     */
     public function minutelyAt(int $sc): self
     {
         $this->schedule[$this->actual_id][0] = [(int) $sc];
@@ -291,13 +215,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every hour <br />
-     * Analog cron('* * *&#47;1 * * * *') <br />
-     * Analog cron('0 0 *&#47;1 * * * *')
-     * 
-     * @return self
-     */
     public function hourly(): self
     {
             $this->schedule[$this->actual_id][0] = [0];
@@ -306,14 +223,6 @@ class PhpCron
         return $this;
     }
 
-    /**
-     * Run task every hour at certain second and minute <br />
-     * Analog cron('20 15 * * * * *')
-     * 
-     * @param string $mn_sc Minute:Second
-     * 
-     * @return self
-     */
     public function hourlyAt(string $mn_sc): self
     {
         $time = array_reverse(explode(':', $mn_sc));
@@ -411,6 +320,10 @@ class PhpCron
     /**********         RESTRICTIONS            **********/
     public function weekdays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(1, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 1);
         }
@@ -436,6 +349,10 @@ class PhpCron
 
     public function sundays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(0, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 0);
         }
@@ -445,6 +362,10 @@ class PhpCron
 
     public function mondays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(1, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 1);
         }
@@ -454,6 +375,10 @@ class PhpCron
 
     public function tuesdays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(2, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 2);
         }
@@ -463,6 +388,10 @@ class PhpCron
 
     public function wednesdays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(3, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 3);
         }
@@ -472,6 +401,10 @@ class PhpCron
 
     public function thursdays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(4, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 4);
         }
@@ -481,6 +414,10 @@ class PhpCron
 
     public function fridays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(5, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 5);
         }
@@ -490,6 +427,10 @@ class PhpCron
 
     public function saturdays(): self
     {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
         if (!in_array(6, $this->schedule[$this->actual_id][6])) {
             array_push($this->schedule[$this->actual_id][6], 6);
         }
@@ -607,8 +548,12 @@ class PhpCron
      *
      * @return self
      */
-    public function start(): self
+    public function start($show_schedule = false): self
     {
+        if ($show_schedule) {
+            echo print_r($this->schedule, true);
+            exit();
+        }
         if (file_exists($this->pid_file_name)) {
             $pid = file_get_contents($this->pid_file_name);
 
@@ -656,6 +601,22 @@ class PhpCron
     }
 
     /**
+     * Stop old PhpCron process and restart it once
+     *
+     * @return self
+     */
+    public function restartOnce(): self
+    {
+        if (!file_exists($this->restart_block)) {
+            $this->stop();
+            touch($this->restart_block);
+            $this->start();
+        }
+
+        return $this;
+    }
+
+    /**
      * Stop old PhpCron process and restart it
      *
      * @return self
@@ -683,6 +644,11 @@ class PhpCron
                     posix_kill((int) $chpid, SIGTERM);
                 }
                 unlink ($this->pid_file_name . 's');
+            }
+
+            // удаляем файл блокировки рестарта
+            if (file_exists($this->restart_block)){
+                unlink ($this->restart_block);
             }
 
             // удаляем PID файл родительского процесса
@@ -714,6 +680,28 @@ class PhpCron
     }
 
     /**********         OTHER            **********/
+
+    public function setOption(string $parameter, $value): self
+    {
+        $this->options[$parameter] = $value;
+
+        return $this;
+    }
+
+    public function getOption(string $parameter)
+    {
+        return $this->options[$parameter];
+    }
+
+    public function getShedule()
+    {
+        if ($this->options['isTest']) {
+            return $this->schedule;
+        }
+
+        return false;
+    }
+
     /**
      * Generates unique id for tasks
      * @return string
@@ -751,7 +739,7 @@ class PhpCron
             //'key' => $this->getUniqKey(10000, 99999),
         ];
 
-        $this->schedule[$this->actual_id] = [1, 1, 1, 1, 1, 1, []];
+        $this->schedule[$this->actual_id] = [1, 1, 1, 1, 1, 1, 1];
 
         return true;
     }
@@ -774,6 +762,7 @@ class PhpCron
         $key = 0;
         $run = false;
         $stamp = date('U');
+        $timestamp = date('U') + $this->options['child_die_time'];
         $this->start_cron = $stamp;
         $start = microtime(true);
         $queue = msg_get_queue(posix_getpid(), 0666);
@@ -781,6 +770,22 @@ class PhpCron
         $this->prepareNextTasks();
 
         while (true) {
+            if (date('U') > $timestamp) {
+                // проверяем что наш PID есть списке запущенных процессов, если нет - умираем
+                if (file_exists($this->pid_file_name)) {
+                    $last_pids = file_get_contents($this->pid_file_name);
+
+                    if ((int)$last_pids != posix_getpid()) {
+                        posix_kill((int) posix_getpid(), SIGTERM);
+                    }
+                } else {
+                    posix_kill((int) posix_getpid(), SIGTERM);
+                }
+
+                $timestamp = date('U') + $this->options['child_die_time'];
+            }
+
+
             if ($stamp != date('U')) {
                 $stamp = date('U');
 
@@ -995,8 +1000,29 @@ class PhpCron
         $prpid = file_get_contents($this->pid_file_name);
         $this->child_run_flag = true;
         $queue = msg_get_queue($prpid, 0666);
+        $timestamp = date('U') + $this->options['child_die_time'];
 
         while (true) {
+            if (date('U') > $timestamp) {
+                // проверяем что наш PID есть списке запущенных процессов, если нет - умираем
+                if (file_exists($this->pid_file_name . 's')) {
+                    $last_pids = file($this->pid_file_name . 's');
+                    $in_file = false;
+
+                    foreach ($last_pids as $chpid) {
+                        if ((int)$chpid == posix_getpid()) {
+                            $in_file = true;
+                            break;
+                        }
+                    }
+                    if (!$in_file) posix_kill((int) $chpid, SIGTERM);
+                } else {
+                    if (!$in_file) posix_kill((int) $chpid, SIGTERM);
+                }
+
+                $timestamp = date('U') + $this->options['child_die_time'];
+            }
+
             msg_send($queue, posix_getpid(), (int) $this->child_run_flag);
 
             $task_param = $this->tasks[$task];
