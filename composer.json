@@ -15,6 +15,6 @@
         "phpunit/phpunit": "^6.5"
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit"
+        "test": "./vendor/bin/phpunit && ./vendor/bin/phpdoc run -d ./public/ -t ./docs/phpdoc/"
     }
 }

@@ -80,9 +80,11 @@ class PhpCron
      *
      * @param string $string
      * @return self
+     *
      */
     public function exec(string $string): self
     {
+        // TODO clean it
         $this->createTask('exec', $string);
         return $this;
     }
