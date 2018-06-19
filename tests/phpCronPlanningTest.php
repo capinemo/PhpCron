@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once dirname(__FILE__).'./../public/PhpCron.php';
+require_once dirname(__FILE__).'./../public/phpCron.php';
 
 use PHPUnit\Framework\TestCase;
 
@@ -15,170 +15,309 @@ final class phpCronPlanningTest extends TestCase
      */
     public function testCronPlanning($cron_str, $expected_arr)
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->cron($cron_str)->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')->cron($cron_str)
+                ->getShedule();
+        
         $this->assertContains($expected_arr, $result);
     }
 
     public function testEverySecondsPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everySeconds()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everySeconds()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryFiveSecondsPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyFiveSeconds()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyFiveSeconds()
+                ->getShedule();
+        
         $this->assertContains([5, 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryTenSecondsPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyTenSeconds()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyTenSeconds()
+                ->getShedule();
+        
         $this->assertContains([10, 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryThirtySecondsPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyThirtySeconds()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyThirtySeconds()
+                ->getShedule();
+        
         $this->assertContains([30, 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryMinutePlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyMinute()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyMinute()
+                ->getShedule();
+        
         $this->assertContains([[0], 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryFiveMinutesPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyFiveMinutes()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyFiveMinutes()
+                ->getShedule();
+        
         $this->assertContains([[0], 5, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryTenMinutesPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyTenMinutes()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyTenMinutes()
+                ->getShedule();
+        
         $this->assertContains([[0], 10, 1, 1, 1, 1, 1], $result);
     }
 
     public function testEveryThirtyMinutesPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyThirtyMinutes()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyThirtyMinutes()
+                ->getShedule();
+        
         $this->assertContains([[0], 30, 1, 1, 1, 1, 1], $result);
     }
 
     public function testMinutelyAtPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->minutelyAt(29)->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->minutelyAt(29)
+                ->getShedule();
+        
         $this->assertContains([[29], 1, 1, 1, 1, 1, 1], $result);
     }
 
     public function testHourlyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->hourly()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->hourly()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], 1, 1, 1, 1, 1], $result);
     }
 
     public function testHourlyAtPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->hourlyAt('15:30')->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->hourlyAt('15:30')
+                ->getShedule();
+        
         $this->assertContains([[30], [15], 1, 1, 1, 1, 1], $result);
     }
 
     public function testDailyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->daily()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->daily()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [0], 1, 1, 1, 1], $result);
     }
 
     public function testDailyAtPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->dailyAt('22:15:30')->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->dailyAt('22:15:30')
+                ->getShedule();
+        
         $this->assertContains([[30], [15], [22], 1, 1, 1, 1], $result);
     }
 
     public function testTwiceDailyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->twiceDaily(14, 19)->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->twiceDaily(14, 19)
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [14, 19], 1, 1, 1, 1], $result);
     }
 
     public function testMonthlyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->monthly()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->monthly()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [0], [1], 1, 1, 1], $result);
     }
 
     public function testMonthlyOnPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->monthlyOn(4, '22:15:30')->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->monthlyOn(4, '22:15:30')
+                ->getShedule();
+        
         $this->assertContains([[30], [15], [22], [4], 1, 1, 1], $result);
     }
 
     public function testEveryTwoMonthPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->everyTwoMonth()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->everyTwoMonth()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [0], [1], 2, 1, 1], $result);
     }
 
     public function testQuarterlyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->quarterly()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->quarterly()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [0], [1], [1, 4, 7, 10], 1, 1], $result);
     }
 
     public function testYearlyPlanning()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->yearly()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->yearly()
+                ->getShedule();
+        
         $this->assertContains([[0], [0], [0], [1], [1], 1, 1], $result);
     }
 
     /**********         RESTRICTIONS            **********/
     public function testWeekdaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->weekdays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->weekdays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [1, 2, 3, 4, 5]], $result);
     }
 
     public function testSundaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->sundays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->sundays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [0]], $result);
     }
 
     public function testMondaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->mondays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->mondays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [1]], $result);
     }
 
     public function testTuesdaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->tuesdays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->tuesdays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [2]], $result);
     }
 
     public function testWednesdaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->wednesdays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->wednesdays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [3]], $result);
     }
 
     public function testThursdaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->thursdays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->thursdays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [4]], $result);
     }
 
     public function testFridaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->fridays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->fridays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [5]], $result);
     }
 
     public function testSaturdaysRestriction()
     {
-        $result = (new PhpCron())->setOption('isTest', true)->exec('')->saturdays()->getShedule();
+        $result = (new PhpCron())
+                ->setOption('isTest', true)
+                ->exec('')
+                ->saturdays()
+                ->getShedule();
+        
         $this->assertContains([1, 1, 1, 1, 1, 1, [6]], $result);
     }
 

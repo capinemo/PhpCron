@@ -9,3 +9,34 @@
         <div>TODO write content</div>
     </body>
 </html>
+
+
+ *
+ * USAGE:
+ * 1. Create file f.e. cron.php
+   ==============================================
+    #!/usr/bin/env php
+    <?php
+    require_once 'library/PhpCron/PhpCron.php';
+
+    $cron = new PhpCron();
+    $cron->reset()->call(function() {
+        echo date('U') . PHP_EOL;
+    })->everyFiveSeconds()->start();
+
+   ==============================================
+ * 2. You might check in by running in console.
+ * 3. Run
+    > crontab -e
+ * 4. Save autoloader cron.php:
+    * * * * * php
+ *
+ * PhpCron format
+ * 1 - Seconds
+ * 2 - Minutes
+ * 3 - Hours
+ * 4 - Days
+ * 5 - Month
+ * 6 - Years
+ * 7 - Days of week
+ *
