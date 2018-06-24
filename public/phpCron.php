@@ -1,77 +1,185 @@
 <?php
+
 /**
- * Class PhpCron
+ * phpCron - PHP Cron analogue
  *
- * PHP Cron analogue
- *
- * USAGE:
- * 1. Create file f.e. cron.php
-   ==============================================
-    #!/usr/bin/env php
-    <?php
-    require_once 'library/PhpCron/PhpCron.php';
-
-    $cron = new PhpCron();
-    $cron->reset()->call(function() {
-        echo date('U') . PHP_EOL;
-    })->everyFiveSeconds()->start();
-
-   ==============================================
- * 2. You might check in by running in console.
- * 3. Run
-    > crontab -e
- * 4. Save autoloader cron.php:
-    * * * * * php
- *
- * PhpCron format
- * 1 - Seconds
- * 2 - Minutes
- * 3 - Hours
- * 4 - Days
- * 5 - Month
- * 6 - Years
- * 7 - Days of week
- *
- * @author Sadykov Rustem <capitan__nemo@mail.ru>
- * @version 0.5.0
+ * Tasks execution scheduler (console or php scripts) at a certain time
+ * 
+ * 1. Requiments:
+ *  - php7.0
+ *  - php7-cli
+ *  - php7-pcntl
+ *  - php7-posix
+ *  - php7-sysvmsg
+ * 
+ * 2. Installation
+ * 
+ * 3. Usage
+ * 
+ * 4. Documentation & testing
+ * 
+ * 
+ * @package     phpCron
+ * @author      Sadykov Rustem <capitan__nemo@mail.ru>
+ * @version     0.5.0
+ * @copyright   Copyright (c) 2018, Picum.ru
  *
  */
-class PhpCron
+class phpCron
 {
-    private $pcount             =   0;      // Текущее количество запущенных процессов
-    private $pid_file_name      =   '/tmp/phpcron.pid';
-    private $restart_block      =   '/tmp/php_cron.blk';
+    /**
+     * Count of running processes
+     * @var integer 
+     */
+    private $pcount = 0;
+    
+    /**
+     * File name of the parent process pid
+     * @var string
+     */
+    private $pid_file_name = null;
+    
+    /**
+     * File name of the list with child processes pids
+     * @var string
+     */
+    private $pids_list_name = null;
+    
+    /**
+     * Restart lock file name
+     * If exists start of the same process is blocked
+     * @var string 
+     */
+    private $restart_block_name = null;
+    
+    /**
+     * Debug output file name
+     * @var string 
+     */
+    private $debug_log_name = null;
 
-    private $start_cron         =   null;   // PhpCron start datetime
-    private $stop_cron          =   null;   // PhpCron stop datetime
-    private $actual_id          =   null;   // Last saving task id
-    private $pid                =   null;   // PhpCron process pid
-    private $pfile              =   null;   // PhpCron pid file resource pointer
-    private $tasks              =   [];     // Tasks collection
-    private $schedule           =   [];     // Tasks schedules
-    private $plan               =   [];     // Tasks plans
-    private $process            =   [];     // Child process list
-    private $queue              =   [];     // Tasks queue then run over withoutOverlappingAll method
-    private $errors             =   [];     // Errors array
-    private $debug_stream       =   null;   // Debug file write resource;
-    private $child_run_flag     =   false;  // Флаг дочернего процесса на запуск обработки задачи
-    private $queue_busy_flag    =   false;  // Флаг того что очередь занята выполнением задачи
-    private $options            =   [
-                                        'queue'         => null,                // Запрет запуска, если предыдущее задание не завершено
-                                        'queue_limit'   => 200,                  // Объем очереди по умолчанию
-                                        'max_pcount'    => 300,                 // Максимальное количество запущенных процессов
-                                        'timezone'      => 'Europe/Moscow',     // Временная зона по умолчанию
-                                        'debug'         => false,               // Флаг отладки
-                                        'debug_file'    => '',                  // Если указан файл, вывод идет в файл вместо терминала
-                                        'no_double'     => false,               // If task already in the queue, next execution ignore
-                                        'child_die_time'=> 60 * 60,             // Время жизни потомка, если его пида нет в списке активных задач
-                                        'isTest'        => false,
-                                    ];
+    /**
+     * Date and time of process start
+     * @var string
+     */
+    private $start_cron = null;
+    
+    /**
+     * Date and time of process finish
+     * @var string
+     */
+    private $stop_cron = null;
+    
+    /**
+     * ID of the current task
+     * Used in schedule generating process. When calls 'exec' or 'call' methods
+     * this parameter changes.
+     * @var string 
+     */
+    private $actual_id = null;
+    
+    /**
+     * Pid of current process (parent or schedule childs)
+     * @var integer 
+     */
+    private $pid = null;
+    
+    /**
+     * Resource pointer to parent pid file
+     * @var resource 
+     */
+    private $pfile = null;
+    
+    /**
+     * List of tasks statuses
+     * @var array 
+     */
+    private $tasks = [];
+    
+    /**
+     * List of scheduled tasks
+     * @var array 
+     */
+    private $schedule = [];
+    
+    /**
+     * List of tasks prepared for execution in next iteration if tasks runs
+     * independence
+     * @var array 
+     */
+    private $plan = [];
+    
+    /**
+     * List of tasks prepared for execution in next iteration if tasks
+     * runs over withoutOverlappingAll method in queue
+     * @var array 
+     */
+    private $queue = [];
+    
+    /**
+     * List of child processes pids
+     * TODO add desciption
+     * @var type 
+     */
+    private $process = [];
+    
+    /**
+     * Errors log
+     * @var array 
+     */
+    private $errors = [];
+    
+    /**
+     * Resource pointer to debug log file 
+     * @var type 
+     */
+    private $debug_stream = null;
+    
+    /**
+     * TODO add desciption (Флаг дочернего процесса на запуск обработки задачи)
+     * @var boolean 
+     */
+    private $child_run_flag = false;
+    
+    /**
+     * TODO add desciption (Флаг того что очередь занята выполнением задачи)
+     * @var boolean 
+     */
+    private $queue_busy_flag = false;
+    
+    /**
+     * phpCron options
+     * @var array 
+     */
+    private $options = [
+        // Queue type depending on needed to run all tasks in turn 
+        // or only the same type (all|task)
+        'queue' => null,
+        // Maximum size of queue
+        'queue_limit' => 200,
+        // Maximum count of running child processes
+        'max_pcount' => 300,
+        // Default timezone
+        'timezone' => 'Europe/Moscow',
+        // Debug mode flag
+        'debug' => false,
+        // If task already in the queue, next execution ignore
+        'no_double' => false,
+        // Die time of child process, if it pid does not contain in the child pids list
+        'child_die_time'=> 60 * 60,
+        // Execution in testing mode (testing before deploy)
+        'isTest'        => false
+    ];
 
+    /**
+     * Set
+     */
     public function __construct()
     {
-        $user_pid = get_current_user();
-        $this->pid_file_name = "/tmp/phpcron_{$user_pid}.pid";
+        $this->pid_file_name = "/tmp/phpcron_" . get_current_user() . ".pid";
+        $this->pids_list_name = "/tmp/phpcron_" . get_current_user() . ".pids";
+        $this->restart_block_name = "/tmp/phpcron_" . get_current_user() . ".blk";
+        $this->debug_log_name = __DIR__ . "/phpcron_" . get_current_user() . ".log";
     }
 
     /**********         COMMANDS            **********/
@@ -483,15 +591,22 @@ class PhpCron
         return $this;
     }
 
+    /**
+     * 
+     * @param string $filename
+     * @return \self
+     * @final
+     */
     public function debugMe(string $filename = null): self
     {
         $this->options['debug'] = true;
-
+        
         if ($filename) {
-            $this->debug_stream = fopen($filename, 'wb');
-            $this->options['debug_file'] = $filename;
+            $this->debug_log_name = $filename;
         }
 
+        $this->debug_stream = fopen($this->debug_log_name, 'wb');
+        
         return $this;
     }
 
@@ -553,7 +668,7 @@ class PhpCron
     public function start($show_schedule = false): self
     {
         if ($show_schedule) {
-            echo print_r($this->schedule, true);
+            echo print_r($this->tasks, true);
             exit();
         }
         if (file_exists($this->pid_file_name)) {
@@ -609,9 +724,9 @@ class PhpCron
      */
     public function restartOnce(): self
     {
-        if (!file_exists($this->restart_block)) {
+        if (!file_exists($this->restart_block_name)) {
             $this->stop();
-            touch($this->restart_block);
+            touch($this->restart_block_name);
             $this->start();
         }
 
@@ -640,17 +755,17 @@ class PhpCron
     {
         if (file_exists($this->pid_file_name)) {
             // убиваем прошлые дочерние процессы
-            if (file_exists($this->pid_file_name . 's')) {
-                $last_pids = file($this->pid_file_name . 's');
+            if (file_exists($this->pids_list_name)) {
+                $last_pids = file($this->pids_list_name);
                 foreach ($last_pids as $chpid) {
                     posix_kill((int) $chpid, SIGTERM);
                 }
-                unlink ($this->pid_file_name . 's');
+                unlink ($this->pids_list_name);
             }
 
             // удаляем файл блокировки рестарта
-            if (file_exists($this->restart_block)){
-                unlink ($this->restart_block);
+            if (file_exists($this->restart_block_name)){
+                unlink ($this->restart_block_name);
             }
 
             // удаляем PID файл родительского процесса
@@ -925,7 +1040,7 @@ class PhpCron
                 } else if ($pid) {
                     $this->tasks[$this->queue[0]]['pid'] = $pid;
                     $this->process[$pid] = $this->queue[0];
-                    $pids = fopen($this->pid_file_name . 's', "ab");
+                    $pids = fopen($this->pids_list_name, "ab");
                     fwrite ($pids, $pid . PHP_EOL);
                     $this->pcount++;
                 } else {
@@ -962,7 +1077,7 @@ class PhpCron
                     } else if ($pid) {
                         $this->tasks[$task]['pid'] = $pid;
                         $this->process[$pid] = $task;
-                        $pids = fopen($this->pid_file_name . 's', "ab");
+                        $pids = fopen($this->pids_list_name, "ab");
                         fwrite ($pids, $pid . PHP_EOL);
                         $this->pcount++;
                     } else {
@@ -1007,8 +1122,8 @@ class PhpCron
         while (true) {
             if (date('U') > $timestamp) {
                 // проверяем что наш PID есть списке запущенных процессов, если нет - умираем
-                if (file_exists($this->pid_file_name . 's')) {
-                    $last_pids = file($this->pid_file_name . 's');
+                if (file_exists($this->pids_list_name)) {
+                    $last_pids = file($this->pids_list_name);
                     $in_file = false;
 
                     foreach ($last_pids as $chpid) {

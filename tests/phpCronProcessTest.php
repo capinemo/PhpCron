@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once dirname(__FILE__).'./../public/PhpCron.php';
+require_once dirname(__FILE__).'./../public/phpCron.php';
 
 use PHPUnit\Framework\TestCase;
 

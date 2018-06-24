@@ -3,10 +3,10 @@
 
 define('BASE_DIR', __DIR__);
 
-require_once __DIR__ . 'PhpCron.php';
+require_once __DIR__ . '/phpCron.php';
 
 $cron = new PhpCron();
-$cron->debugMe('/debug.log');
+$cron->debugMe('./debug.log');
 $cron->withoutOverlapping();
 $cron->stop();
 
