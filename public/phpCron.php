@@ -130,12 +130,6 @@ class phpCron
     private $errors = [];
 
     /**
-     * Resource pointer to debug log file 
-     * @var type 
-     */
-    private $debug_stream = null;
-
-    /**
      * TODO add desciption (Флаг дочернего процесса на запуск обработки задачи)
      * @var boolean 
      */
@@ -168,7 +162,39 @@ class phpCron
         // Die time of child process, if it pid does not contain in the child pids list
         'child_die_time'=> 60 * 60,
         // Execution in testing mode (testing before deploy)
-        'isTest'        => false
+        'isTest'        => false,
+        // Default language for messages
+        'defLang'       => 'en'
+    ];
+    
+    /**
+     * phpCron array of the messages with selected language
+     * @var array 
+     */
+    private $message = [];
+    
+    /**
+     * phpCron messages
+     * @var array 
+     */
+    private $mess = [
+        'en' => [
+            'cron_unparse'          => 'Not valid format of string in phpCron::cron(), given: ',
+            'hourlyAt_unparse'      => 'Not valid format of string in phpCron::hourlyAt(), given: ',
+            'hourlyAt_empty'        => 'Parameter must have MM:SS format in phpCron::hourlyAt(), given: ',
+            'dailyAt_unparse'       => 'Not valid format of string in phpCron::dailyAt(), given: ',
+            'dailyAt_empty'         => 'Parameter must have HH:MM:SS format in phpCron::dailyAt(), given: ',
+            'monthlyOn_unparse'     => 'Not valid format of string in phpCron::monthlyOn(), given: ',
+            'monthlyOn_empty'       => 'Parameter must have HH:MM:SS format in phpCron::monthlyOn(), given: ',
+            ''        => '',
+            ''        => '',
+            ''        => '',
+            ''        => '',
+            ''        => '',
+            ''        => '',
+            ''        => '',
+        ],
+        'ru' => [],
     ];
 
     /**
@@ -182,6 +208,7 @@ class phpCron
         $this->pid_file_name = "/tmp/phpcron_" . get_current_user() . ".pid";
         $this->pids_list_name = "/tmp/phpcron_" . get_current_user() . ".pids";
         $this->restart_block_name = "/tmp/phpcron_" . get_current_user() . ".blk";
+        $this->message = $this->mess[$this->options['defLang']];
     }
 
     /**********         COMMANDS            **********/
@@ -192,10 +219,10 @@ class phpCron
      * @return self
      * @final
      */
-    public function exec(string $string): self
+    public function exec($string)
     {
-        // TODO clean it
-        $this->createTask('exec', $string);
+        $this->createTask('exec', (string) $string);
+        
         return $this;
     }
 
@@ -206,361 +233,579 @@ class phpCron
      * @return self
      * @final
      */
-    public function call(callable $callback): self
+    public function call($callback)
     {
         $this->createTask('call', $callback);
+        
         return $this;
     }
 
-                        /**********         PLANNING            **********/
-                        /**
-                         * Schedule prepare string
-                         * @param string $string
-                         * @return self
-                         */
-                        public function cron($string = '* * * * * * *'): self
-                        {
-                            $time = explode(' ', $string);
-                            $matches = [];
-                            $set_time = false;
+    /**********         PLANNING            **********/
+    /**
+     * Set execution schedule in order to given string
+     * 
+     * @param string $string
+     * @return self
+     * @final
+     */
+    public function cron($string = '* * * * * * *')
+    {
+        $time = explode(' ', $string);
+        $matches = [];
+        $setMajorTimeLevel = false;
+        $parsing_error = false;
 
-                            for ($i = count($time) - 1; $i >= 0; $i--) {
-                                if ($time[$i] == '*') {
-                                // Каждый момент единицы времени
-                                    if ($set_time) {
-                                        $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
-                                        continue;
-                                    }
-                                    $this->schedule[$this->actual_id][$i] = 1;
-                                }  else if ((preg_match('/^\*\/([0-9]+)$/', $time[$i], $matches))) {
-                                // Момент единицы времени с определенной приодичностью
-                                    /*if ($set_time) {
-                                        $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
-                                        continue;
-                                    }*/
-                                    $this->schedule[$this->actual_id][$i] = $matches[1];
-                                    if ($i != count($time) - 1) $set_time = true;
-                                } else if (preg_match('/^([0-9]{1,2})$/', $time[$i], $matches)) {
-                                // Конкретный момент времени
-                                    $this->schedule[$this->actual_id][$i] = [$matches[0]];
-                                    if ($i != count($time) - 1) $set_time = true;
-                                } else if ((preg_match('/^([0-9,\-]+)$/', $time[$i], $matches))) {
-                                // Несколько конкретных моментов времени
-                                    $this->schedule[$this->actual_id][$i] = [];
+        for ($i = count($time) - 1; $i >= 0; $i--) {
+            if ($time[$i] == '*') {
+                // Every moment
 
-                                    foreach (explode(',', $matches[0]) as $value) {
-                                        if ((preg_match('/^([0-9]{1,4})$/', $value, $matches))) {
-                                            if (in_array($value, $this->schedule[$this->actual_id][$i])) continue;
-                                            array_push($this->schedule[$this->actual_id][$i], $value);
-                                            If ($i != count($time) - 1) $set_time = true;
-                                        } else if (preg_match('/^([0-9\-]+)$/', $value, $matches)) {
-                                            $period = explode('-', $matches[0]);
-                                            for ($y = $period[0]; $y <= $period[1]; $y++) {
-                                                if (in_array($y, $this->schedule[$this->actual_id][$i])) continue;
-                                                array_push($this->schedule[$this->actual_id][$i], $y);
-                                                If ($i != count($time) - 1) $set_time = true;
-                                            }
-                                        }
-                                    }
-                                }
+                $this->schedule[$this->actual_id][$i] = 1;
+                
+            }  else if ((preg_match('/^\*\/([0-9]+)$/', $time[$i], $matches))) {
+                // Every moment with period
+                
+                $this->schedule[$this->actual_id][$i] = $matches[1];
+                
+            } else if (preg_match('/^([0-9]{1,4})$/', $time[$i], $matches)) {
+                // Certain moment
+                
+                $this->schedule[$this->actual_id][$i] = [$matches[0]];
+                
+            } else if ((preg_match('/^([0-9,\-]+)$/', $time[$i], $matches))) {
+                // Several certain moments
+
+                $this->schedule[$this->actual_id][$i] = [];
+
+                foreach (explode(',', $matches[0]) as $value) {
+                    
+                    if ((preg_match('/^([0-9]{1,4})$/', $value, $matches))) {
+                        // Moment in list
+                        
+                        if (!in_array($value, $this->schedule[$this->actual_id][$i])) {
+                            array_push($this->schedule[$this->actual_id][$i], $value);
+                        }
+                        
+                    } else if (preg_match('/^([0-9\-]+)$/', $value, $matches)) {
+                        // Period in list
+                        
+                        $period = explode('-', $matches[0]);
+                        
+                        for ($y = $period[0]; $y <= $period[1]; $y++) {
+
+                            if (!in_array($y, $this->schedule[$this->actual_id][$i])) {
+                                array_push($this->schedule[$this->actual_id][$i], $y);
                             }
-
-                            return $this;
                         }
-
-                        /**
-                         * Set every second execution schedule
-                         * @return self
-                         * @final
-                         */
-                        public function everySeconds(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = 1;
-
-                            return $this;
-                        }
-
-                        public function everyFiveSeconds(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = 5;
-
-                            return $this;
-                        }
-
-                        public function everyTenSeconds(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = 10;
-
-                            return $this;
-                        }
-
-                        public function everyThirtySeconds(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = 30;
-
-                            return $this;
-                        }
-
-                        public function everyMinute(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-
-                            return $this;
-                        }
-
-                        public function everyFiveMinutes(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = 5;
-
-                            return $this;
-                        }
-
-                        public function everyTenMinutes(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = 10;
-
-                            return $this;
-                        }
-
-                        public function everyThirtyMinutes(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = 30;
-
-                            return $this;
-                        }
-
-                        public function minutelyAt(int $sc): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [(int) $sc];
-
-                            return $this;
-                        }
-
-                        public function hourly(): self
-                        {
-                                $this->schedule[$this->actual_id][0] = [0];
-                                $this->schedule[$this->actual_id][1] = [0];
-
-                            return $this;
-                        }
-
-                        public function hourlyAt(string $mn_sc): self
-                        {
-                            $time = array_reverse(explode(':', $mn_sc));
-
-                            $this->schedule[$this->actual_id][0] = [(int) $time[0]];
-                            $this->schedule[$this->actual_id][1] = [(int) $time[1]];
-
-                            return $this;
-                        }
-
-                        public function daily(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [0];
-
-                            return $this;
-                        }
-
-                        public function dailyAt(string $hr_mn_sc): self
-                        {
-                            $time = array_reverse(explode(':', $hr_mn_sc));
-
-                            $this->schedule[$this->actual_id][0] = [(int) $time[0]];
-                            $this->schedule[$this->actual_id][1] = [(int) $time[1]];
-                            $this->schedule[$this->actual_id][2] = [(int) $time[2]];
-
-                            return $this;
-                        }
-
-                        public function twiceDaily(int $first_hr, int $second_hr): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [(int) $first_hr, (int) $second_hr];
-
-                            return $this;
-                        }
-
-                        public function monthly(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [0];
-                            $this->schedule[$this->actual_id][3] = [1];
-
-                            return $this;
-                        }
-
-                        public function monthlyOn(int $day_num, string $hr_mn_sc): self
-                        {
-                            $time = array_reverse(explode(':', $hr_mn_sc));
-
-                            $this->schedule[$this->actual_id][0] = [(int) $time[0]];
-                            $this->schedule[$this->actual_id][1] = [(int) $time[1]];
-                            $this->schedule[$this->actual_id][2] = [(int) $time[2]];
-                            $this->schedule[$this->actual_id][3] = [(int) $day_num];
-
-                            return $this;
-                        }
-
-                        public function everyTwoMonth(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [0];
-                            $this->schedule[$this->actual_id][3] = [1];
-                            $this->schedule[$this->actual_id][4] = 2;
-
-                            return $this;
-                        }
-
-                        public function quarterly(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [0];
-                            $this->schedule[$this->actual_id][3] = [1];
-                            $this->schedule[$this->actual_id][4] = [1, 4, 7, 10];
-
-                            return $this;
-                        }
-
-                        public function yearly(): self
-                        {
-                            $this->schedule[$this->actual_id][0] = [0];
-                            $this->schedule[$this->actual_id][1] = [0];
-                            $this->schedule[$this->actual_id][2] = [0];
-                            $this->schedule[$this->actual_id][3] = [1];
-                            $this->schedule[$this->actual_id][4] = [1];
-
-                            return $this;
-                        }
-
-                        /**********         RESTRICTIONS            **********/
-                        public function weekdays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(1, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 1);
-                            }
-
-                            if (!in_array(2, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 2);
-                            }
-
-                            if (!in_array(3, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 3);
-                            }
-
-                            if (!in_array(4, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 4);
-                            }
-
-                            if (!in_array(5, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 5);
-                            }
-
-                            return $this;
-                        }
-
-                        public function sundays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(0, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 0);
-                            }
-
-                            return $this;
-                        }
-
-                        public function mondays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(1, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 1);
-                            }
-
-                            return $this;
-                        }
-
-                        public function tuesdays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(2, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 2);
-                            }
-
-                            return $this;
-                        }
-
-                        public function wednesdays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(3, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 3);
-                            }
-
-                            return $this;
-                        }
-
-                        public function thursdays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(4, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 4);
-                            }
-
-                            return $this;
-                        }
-
-                        public function fridays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(5, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 5);
-                            }
-
-                            return $this;
-                        }
-
-                        public function saturdays(): self
-                        {
-                            if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
-                                $this->schedule[$this->actual_id][6] = [];
-                            }
-
-                            if (!in_array(6, $this->schedule[$this->actual_id][6])) {
-                                array_push($this->schedule[$this->actual_id][6], 6);
-                            }
-
-                            return $this;
-                        }
+                    } else {
+                        $parsing_error = true;
+                    }
+                }
+            } else {
+                $parsing_error = true;
+            }
+            
+            // If gets invalid time pointer generate exeption 
+            // and writes debug log
+            if ($parsing_error) {
+                $this->generateError($this->message['cron_unparse'] . $string , true);
+            }
+            
+            
+            // $setMajorTimeLevel - variable indicates that high levels (year, month, 
+            // days, etc.) of time are set. In this case every moment notation (*)
+            // interprets as minimal value of time interval (0 for second, minutes and 
+            // hours; 1 for days, month and years)
+            if ($time[$i] != '*') {
+                if ($i != count($time) - 1) $setMajorTimeLevel = true;
+            } else {
+                if ($setMajorTimeLevel) {
+                    $this->schedule[$this->actual_id][$i] = $i > 2 ? [1] : [0];
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every second
+     * 
+     * @return self
+     * @final
+     */
+    public function everySeconds()
+    {
+        $this->schedule[$this->actual_id][0] = 1;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every five second 
+     * 
+     * @return self
+     * @final
+     */
+    public function everyFiveSeconds()
+    {
+        $this->schedule[$this->actual_id][0] = 5;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every ten second 
+     * 
+     * @return self
+     * @final
+     */
+    public function everyTenSeconds()
+    {
+        $this->schedule[$this->actual_id][0] = 10;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every thirty second 
+     * 
+     * @return self
+     * @final
+     */
+    public function everyThirtySeconds()
+    {
+        $this->schedule[$this->actual_id][0] = 30;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every minute in 0 second
+     * 
+     * @return self
+     * @final
+     */
+    public function everyMinute()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every five minute in 0 second
+     * 
+     * @return self
+     * @final
+     */
+    public function everyFiveMinutes()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = 5;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every ten minute in 0 second
+     * 
+     * @return self
+     * @final
+     */
+    public function everyTenMinutes()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = 10;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every thirty minute in 0 second
+     * 
+     * @return self
+     * @final
+     */
+    public function everyThirtyMinutes()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = 30;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every minute and certain second 
+     * 
+     * @param integer $sc Set certain second for execution in format SS
+     * @return self
+     * @final
+     */
+    public function minutelyAt($sc)
+    {
+        $this->schedule[$this->actual_id][0] = [(int) $sc];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every hour in 0 minute and 0 second
+     * 
+     * @return self
+     * @final
+     */
+    public function hourly()
+    {
+            $this->schedule[$this->actual_id][0] = [0];
+            $this->schedule[$this->actual_id][1] = [0];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every hour and certain minute and second 
+     * 
+     * @param string $mn_sc Set certain second and minute for execution 
+     * in format MM:SS
+     * @return self
+     * @final
+     */
+    public function hourlyAt($mn_sc)
+    {
+        $time = array_reverse(explode(':', $mn_sc));
+        
+        if (count($time) != 2) {
+            $this->generateError($this->message['hourlyAt_unparse'] . (string) $mn_sc , true);
+        } else if (empty($time[0]) || empty($time[1]) ) {
+            $this->generateError($this->message['hourlyAt_empty'] . (string) $mn_sc , true);
+        }
+
+        $this->schedule[$this->actual_id][0] = [(int) $time[0]];
+        $this->schedule[$this->actual_id][1] = [(int) $time[1]];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every day in 00:00:00 
+     * 
+     * @return self
+     * @final
+     */
+    public function daily()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [0];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every hour and certain hour, minute and second 
+     * 
+     * @param string $hr_mn_sc Set certain second, minute and hour for execution 
+     * in format HH:MM:SS
+     * @return self
+     * @final
+     */
+    public function dailyAt($hr_mn_sc)
+    {
+        $time = array_reverse(explode(':', $hr_mn_sc));
+        
+        if (count($time) != 3) {
+            $this->generateError($this->message['dailyAt_unparse'] . (string) $hr_mn_sc , true);
+        } else if (empty($time[0]) || empty($time[1])  || empty($time[2]) ) {
+            $this->generateError($this->message['dailyAt_empty'] . (string) $hr_mn_sc , true);
+        }
+
+        $this->schedule[$this->actual_id][0] = [(int) $time[0]];
+        $this->schedule[$this->actual_id][1] = [(int) $time[1]];
+        $this->schedule[$this->actual_id][2] = [(int) $time[2]];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule twice a day in certain hours, 0 minute and 0 second 
+     * 
+     * @param string $first_hr Set certain hour for execution at day in format HH
+     * @param string $second_hr Set certain hour for execution at day in format HH
+     * @return self
+     * @final
+     */
+    public function twiceDaily($first_hr, $second_hr)
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [(int) $first_hr, (int) $second_hr];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every first day of month in 00:00:00 
+     * 
+     * @return self
+     * @final
+     */
+    public function monthly()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [0];
+        $this->schedule[$this->actual_id][3] = [1];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every cenrtain day of month in 00:00:00 
+     * 
+     * @param string $day_num et certain second day for execution at month 
+     * in format DD
+     * @param string $hr_mn_sc Set certain second, minute and hour for execution 
+     * in format HH:MM:SS
+     * @return self
+     * @final
+     */
+    public function monthlyOn($day_num, $hr_mn_sc)
+    {
+        $time = array_reverse(explode(':', $hr_mn_sc));
+        
+        if (count($time) != 3) {
+            $this->generateError($this->message['monthlyOn_unparse'] . (string) $hr_mn_sc , true);
+        } else if (empty($time[0]) || empty($time[1])  || empty($time[2]) ) {
+            $this->generateError($this->message['monthlyOn_empty'] . (string) $hr_mn_sc , true);
+        }
+
+        $this->schedule[$this->actual_id][0] = [(int) $time[0]];
+        $this->schedule[$this->actual_id][1] = [(int) $time[1]];
+        $this->schedule[$this->actual_id][2] = [(int) $time[2]];
+        $this->schedule[$this->actual_id][3] = [(int) $day_num];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at first day of every second month in 00:00:00 
+     * 
+     * @return self
+     * @final
+     */
+    public function everyTwoMonth()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [0];
+        $this->schedule[$this->actual_id][3] = [1];
+        $this->schedule[$this->actual_id][4] = 2;
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at first day of every third month in 00:00:00 
+     * 
+     * @return self
+     * @final
+     */
+    public function quarterly()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [0];
+        $this->schedule[$this->actual_id][3] = [1];
+        $this->schedule[$this->actual_id][4] = [1, 4, 7, 10];
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every year in first day of january in 00:00:00 
+     * 
+     * @return self
+     * @final
+     */
+    public function yearly()
+    {
+        $this->schedule[$this->actual_id][0] = [0];
+        $this->schedule[$this->actual_id][1] = [0];
+        $this->schedule[$this->actual_id][2] = [0];
+        $this->schedule[$this->actual_id][3] = [1];
+        $this->schedule[$this->actual_id][4] = [1];
+
+        return $this;
+    }
+
+    /**********         RESTRICTIONS            **********/
+    /**
+     * Set execution schedule at every working day
+     * 
+     * @return self
+     * @final
+     */
+    public function weekdays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(1, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 1);
+        }
+
+        if (!in_array(2, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 2);
+        }
+
+        if (!in_array(3, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 3);
+        }
+
+        if (!in_array(4, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 4);
+        }
+
+        if (!in_array(5, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 5);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every sunday
+     * 
+     * @return self
+     * @final
+     */
+    public function sundays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(0, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 0);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every monday
+     * 
+     * @return self
+     * @final
+     */
+    public function mondays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(1, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 1);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every tuesday
+     * 
+     * @return self
+     * @final
+     */
+    public function tuesdays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(2, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 2);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every wednesday
+     * 
+     * @return self
+     * @final
+     */
+    public function wednesdays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(3, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 3);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every thursday
+     * 
+     * @return self
+     * @final
+     */
+    public function thursdays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(4, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 4);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every friday
+     * 
+     * @return self
+     * @final
+     */
+    public function fridays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(5, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 5);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set execution schedule at every saturday
+     * 
+     * @return self
+     * @final
+     */
+    public function saturdays()
+    {
+        if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
+            $this->schedule[$this->actual_id][6] = [];
+        }
+
+        if (!in_array(6, $this->schedule[$this->actual_id][6])) {
+            array_push($this->schedule[$this->actual_id][6], 6);
+        }
+
+        return $this;
+    }
 
                         public function between(string $start_time, string $end_time): self   //NEED
                         {
@@ -605,23 +850,23 @@ class phpCron
                             return $this;
                         }
 
-                        /**
-                         * 
-                         * @param string $filename
-                         * @return \self
-                         * @final
-                         */
-                        public function debugMe(string $filename = null): self
-                        {
-                            $this->options['debug'] = true;
+    /**
+     * 
+     * 
+     * @param string $filename
+     * @return \self
+     */
+    public function debugMe($filename = null)
+    {
+        $this->options['debug'] = true;
 
-                            if ($filename) {
-                                $this->debug_log_name = $filename;
-                                $this->debug_stream = fopen($this->debug_log_name, 'wb');
-                            }
+        if ($filename) {
+            $this->debug_log_name = $filename;
+            touch($this->debug_log_name);
+        }
 
-                            return $this;
-                        }
+        return $this;
+    }
 
                         /**********         RESULT            **********/
                         public function sendOutputTo(string $file): self    //NEED
@@ -1201,6 +1446,21 @@ class phpCron
                                     // обработка других сигналов
                             }
                         }
+                        
+    
+    private function generateError($error_message, $gen_exeption) {
+        $message = date('Y-m-d H:i:s') . "\t" . 'ERROR' . "\t" . $error_message . PHP_EOL;
+        
+        if ($this->options['debug'] && $this->debug_log_name) {
+            file_put_contents($this->debug_log_name, $message, FILE_APPEND);
+        } else {
+            array_push($this->errors, $message);
+        }
+        
+        if ($gen_exeption) {
+            throw new \Exception($message);
+        }
+    }
 }
 
 if (isset($argv[1]) && $argv[1] == 'install') {

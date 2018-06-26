@@ -352,6 +352,119 @@ final class phpCronPlanningTest extends TestCase
 
         $this->assertTrue(true);
     }
+    
+    /**********         ERRORS            **********/
+    /**
+     * @covers \PhpCron::cron
+     * @dataProvider cronPlanningErrorProvider
+     * @expectedException Exception
+     */
+    public function testCronErrorPlanning($cron_str, $expected_arr)
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')->cron($cron_str)
+                ->getShedule();
+        
+        $this->assertContains($expected_arr, $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testHourlyAtErrorPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->hourlyAt('1530')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], 1, 1, 1, 1, 1], $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testHourlyAtErrorEmptyPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->hourlyAt(':')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], 1, 1, 1, 1, 1], $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testDailyAtErrorPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->dailyAt('1530')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], [11], 1, 1, 1, 1], $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testDailyAtErrorEmptyPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->dailyAt('::')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], [11], 1, 1, 1, 1], $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testMonthlyOnErrorPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->monthlyOn(11, '1530')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], [11], ['11'], 1, 1, 1], $result);
+    }
+    
+    /**
+     * @covers \PhpCron::cron
+     * @expectedException Exception
+     */
+    public function testMonthlyOnErrorEmptyPlanning()
+    {
+        $result = (new PhpCron())
+                ->debugMe('./debug.log')
+                ->setOption('isTest', true)
+                ->exec('')
+                ->monthlyOn(11, '::')
+                ->getShedule();
+        
+        $this->assertContains([[30], [15], [11], [11], 1, 1, 1], $result);
+    }
 
     /**********         OPTIONS            **********/
     public function testTimezoneOption()
@@ -386,7 +499,7 @@ final class phpCronPlanningTest extends TestCase
                 [[0], [0], 12, 1, 1, 1, 1]
             ], [
                 '55 */10 0 * * * *',
-                [[55], [0, 10, 20, 30, 40], [0], 1, 1, 1, 1]
+                [[55], 10, [0], 1, 1, 1, 1]
             ], [
                 '25 */10 1-23 * * * *',
                 [[25], 10, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 1, 1, 1, 1]
@@ -404,6 +517,16 @@ final class phpCronPlanningTest extends TestCase
                 [[30], [22], [11], [3], [6], [2018], 1]
             ], [
                 '* * * * * 2017-2019 *',
+                [[0], [0], [0], [1], [1], [2017, 2018, 2019], 1]
+            ]
+        ];
+    }
+    
+    public function cronPlanningErrorProvider()
+    {
+        return [
+            [
+                '** * * * * 2017-2019 *',
                 [[0], [0], [0], [1], [1], [2017, 2018, 2019], 1]
             ],
         ];

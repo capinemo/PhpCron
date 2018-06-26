@@ -2,3 +2,5 @@
 /vendor/
 /docs/phpdoc/
 composer.lock
+debug.log
+
