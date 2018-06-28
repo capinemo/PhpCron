@@ -203,7 +203,7 @@ class phpCron
      * @return phpCron
      * @final
      */
-    public function __construct()
+    final public function __construct()
     {
         $this->pid_file_name = "/tmp/phpcron_" . get_current_user() . ".pid";
         $this->pids_list_name = "/tmp/phpcron_" . get_current_user() . ".pids";
@@ -219,7 +219,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function exec($string)
+    final public function exec($string)
     {
         $this->createTask('exec', (string) $string);
         
@@ -233,7 +233,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function call($callback)
+    final public function call($callback)
     {
         $this->createTask('call', $callback);
         
@@ -248,7 +248,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function cron($string = '* * * * * * *')
+    final public function cron($string = '* * * * * * *')
     {
         $time = explode(' ', $string);
         $matches = [];
@@ -333,7 +333,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everySeconds()
+    final public function everySeconds()
     {
         $this->schedule[$this->actual_id][0] = 1;
 
@@ -346,7 +346,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyFiveSeconds()
+    final public function everyFiveSeconds()
     {
         $this->schedule[$this->actual_id][0] = 5;
 
@@ -359,7 +359,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyTenSeconds()
+    final public function everyTenSeconds()
     {
         $this->schedule[$this->actual_id][0] = 10;
 
@@ -372,7 +372,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyThirtySeconds()
+    final public function everyThirtySeconds()
     {
         $this->schedule[$this->actual_id][0] = 30;
 
@@ -385,7 +385,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyMinute()
+    final public function everyMinute()
     {
         $this->schedule[$this->actual_id][0] = [0];
 
@@ -398,7 +398,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyFiveMinutes()
+    final public function everyFiveMinutes()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = 5;
@@ -412,7 +412,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyTenMinutes()
+    final public function everyTenMinutes()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = 10;
@@ -426,7 +426,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyThirtyMinutes()
+    final public function everyThirtyMinutes()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = 30;
@@ -441,7 +441,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function minutelyAt($sc)
+    final public function minutelyAt($sc)
     {
         $this->schedule[$this->actual_id][0] = [(int) $sc];
 
@@ -454,7 +454,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function hourly()
+    final public function hourly()
     {
             $this->schedule[$this->actual_id][0] = [0];
             $this->schedule[$this->actual_id][1] = [0];
@@ -470,7 +470,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function hourlyAt($mn_sc)
+    final public function hourlyAt($mn_sc)
     {
         $time = array_reverse(explode(':', $mn_sc));
         
@@ -492,7 +492,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function daily()
+    final public function daily()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -509,7 +509,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function dailyAt($hr_mn_sc)
+    final public function dailyAt($hr_mn_sc)
     {
         $time = array_reverse(explode(':', $hr_mn_sc));
         
@@ -534,7 +534,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function twiceDaily($first_hr, $second_hr)
+    final public function twiceDaily($first_hr, $second_hr)
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -549,7 +549,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function monthly()
+    final public function monthly()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -569,7 +569,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function monthlyOn($day_num, $hr_mn_sc)
+    final public function monthlyOn($day_num, $hr_mn_sc)
     {
         $time = array_reverse(explode(':', $hr_mn_sc));
         
@@ -593,7 +593,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function everyTwoMonth()
+    final public function everyTwoMonth()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -610,7 +610,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function quarterly()
+    final public function quarterly()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -627,7 +627,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function yearly()
+    final public function yearly()
     {
         $this->schedule[$this->actual_id][0] = [0];
         $this->schedule[$this->actual_id][1] = [0];
@@ -645,7 +645,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function weekdays()
+    final public function weekdays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -680,7 +680,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function sundays()
+    final public function sundays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -699,7 +699,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function mondays()
+    final public function mondays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -718,7 +718,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function tuesdays()
+    final public function tuesdays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -737,7 +737,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function wednesdays()
+    final public function wednesdays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -756,7 +756,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function thursdays()
+    final public function thursdays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -775,7 +775,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function fridays()
+    final public function fridays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -794,7 +794,7 @@ class phpCron
      * @return self
      * @final
      */
-    public function saturdays()
+    final public function saturdays()
     {
         if (gettype($this->schedule[$this->actual_id][6]) != 'array' ) {
             $this->schedule[$this->actual_id][6] = [];
@@ -807,48 +807,96 @@ class phpCron
         return $this;
     }
 
-                        public function between(string $start_time, string $end_time): self   //NEED
-                        {
-                            return $this;
-                        }
+    /**
+     * Schedule a task in given interval
+     * 
+     * @param string $start_time Begin of interval
+     * @param string $end_time End of interval
+     * @return $this
+     * @final
+     */
+    final public function between($start_time, $end_time)
+    {
+        $this->tasks[$this->actual_id]['limit'] = [
+            date('U', strtotime($start_time))
+            , date('U', strtotime($end_time))
+        ];
+        
+         $this->tasks[$this->actual_id]['ltype'] = 'in';
+        
+        return $this;
+    }
 
-                        public function unlessBetween (string $start_time, string $end_time): self   //NEED
-                        {
-                            return $this;
-                        }
+    /**
+     * Schedule a task outside the specified interval
+     * 
+     * @param string $start_time Begin of interval
+     * @param string $end_time End of interval
+     * @return $this
+     * @final
+     */
+    final public function unlessBetween ($start_time, $end_time)
+    {
+        $this->tasks[$this->actual_id]['limit'] = [
+            date('U', strtotime($start_time))
+            , date('U', strtotime($end_time))
+        ];
+        
+         $this->tasks[$this->actual_id]['ltype'] = 'out';
+        
+        return $this;
+    }
 
-                        public function when(callable $callback): self   //NEED
-                        {
-                            return $this;
-                        }
+    /**
+     * Schedule a task if callback return true
+     * 
+     * @param callable $callback Callback functuin for check
+     * @return $this
+     * @final
+     */
+    final public function when($callback)
+    {
+        $this->tasks[$this->actual_id]['truecheck'] = $callback;
 
-                        public function skip(callable $callback): self   //NEED
-                        {
-                            return $this;
-                        }
+        return $this;
+    }
 
-                        /**********         OPTIONS            **********/
-                        public function withoutOverlapping(): self
-                        {
-                            $this->options['queue'] = 'task';
-                            return $this;
-                        }
+    /**
+     * Schedule a task if callback return false
+     * 
+     * @param callable $callback Callback functuin for check
+     * @return $this
+     * @final
+     */
+    public function skip($callback)
+    {
+        $this->tasks[$this->actual_id]['falsecheck'] = $callback;
+                
+        return $this;
+    }
 
-                        public function withoutOverlappingAll($queue_no_double = false): self
-                        {
-                            $this->options['queue'] = 'all';
-                            $this->options['no_double'] = $queue_no_double;
+    /**********         OPTIONS            **********/
+    public function withoutOverlapping(): self
+    {
+        $this->options['queue'] = 'task';
+        return $this;
+    }
 
-                            return $this;
-                        }
+    public function withoutOverlappingAll($queue_no_double = false): self
+    {
+        $this->options['queue'] = 'all';
+        $this->options['no_double'] = $queue_no_double;
 
-                        public function timezone(string $timezone): self    //NEED
-                        {
-                            // Пока тоже откладывается. date(U), как и DateTime временную зону не учитывает,
-                            // нужно переделывать ключи, для учета временной зоны
-                            $this->options['timezone'] = $timezone;
-                            return $this;
-                        }
+        return $this;
+    }
+
+    public function timezone(string $timezone): self    //NEED
+    {
+        // Пока тоже откладывается. date(U), как и DateTime временную зону не учитывает,
+        // нужно переделывать ключи, для учета временной зоны
+        $this->options['timezone'] = $timezone;
+        return $this;
+    }
 
     /**
      * 
@@ -927,6 +975,7 @@ class phpCron
                         {
                             if ($show_schedule) {
                                 echo print_r($this->tasks, true);
+                                echo print_r($this->schedule, true);
                                 exit();
                             }
 
@@ -1108,11 +1157,19 @@ class phpCron
                                 // устанавливается в false и больше в генерации расписания не учавствует
                                 // применяется при разовых задачах, у которых первые шесть символов
                                 // в расписании числа, и ни одного массива
-                                'live' => null,     //NEED
+                                'live' => true,     //NEED
                                 // Статус задачи, 1 - выполняется, 0 ожидание
                                 'state' => false,
                                 // уникальный ключ очереди
                                 //'key' => $this->getUniqKey(10000, 99999),
+                                // границы действия расписания
+                                'limit' => [],
+                                // тип границ (внешний, внутренний)
+                                'ltype' => null,
+                                // функция, возвращающая положительный результат запускает задачу
+                                'truecheck' => null,
+                                // функция, возвращающая отрицательный результат запускает задачу
+                                'falsecheck' => null,
                             ];
 
                             $this->schedule[$this->actual_id] = [1, 1, 1, 1, 1, 1, 1];
