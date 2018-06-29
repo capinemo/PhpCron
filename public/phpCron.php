@@ -868,7 +868,7 @@ class phpCron
      * @return $this
      * @final
      */
-    public function skip($callback)
+    final public function skip($callback)
     {
         $this->tasks[$this->actual_id]['falsecheck'] = $callback;
                 
@@ -876,13 +876,26 @@ class phpCron
     }
 
     /**********         OPTIONS            **********/
-    public function withoutOverlapping(): self
+    /**
+     * Runs each task without overlapping, different tasks may overlap
+     *
+     * @return $this
+     * @final
+     */
+    final public function withoutOverlapping()
     {
         $this->options['queue'] = 'task';
         return $this;
     }
 
-    public function withoutOverlappingAll($queue_no_double = false): self
+    /**
+     * Runs all task without overlapping
+     *
+     * @param boolean $queue_no_double If next task must to run in task execution time it's skip
+     * @return $this
+     * @final
+     */
+    final public function withoutOverlappingAll($queue_no_double = false)
     {
         $this->options['queue'] = 'all';
         $this->options['no_double'] = $queue_no_double;
@@ -890,7 +903,12 @@ class phpCron
         return $this;
     }
 
-    public function timezone(string $timezone): self    //NEED
+    /**
+     * Sets timezone for schedule
+     * @param string $timezone
+     * @return $this
+     */
+    public function timezone(string $timezone)
     {
         // Пока тоже откладывается. date(U), как и DateTime временную зону не учитывает,
         // нужно переделывать ключи, для учета временной зоны
