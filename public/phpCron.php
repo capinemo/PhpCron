@@ -876,6 +876,7 @@ class phpCron
     }
 
     /**********         OPTIONS            **********/
+
     
     /**
      * Changes option value in parameters list
@@ -893,6 +894,7 @@ class phpCron
     }
 
     /**
+
      * Read and return option value
      * @param string $parameter Parameter name
      * @return any
