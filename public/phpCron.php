@@ -186,10 +186,10 @@ class phpCron
             'dailyAt_empty'         => 'Parameter must have HH:MM:SS format in phpCron::dailyAt(), given: ',
             'monthlyOn_unparse'     => 'Not valid format of string in phpCron::monthlyOn(), given: ',
             'monthlyOn_empty'       => 'Parameter must have HH:MM:SS format in phpCron::monthlyOn(), given: ',
-            ''        => '',
-            ''        => '',
-            ''        => '',
-            ''        => '',
+            'alreay_running'        => 'phpCron already runnung. Exit',
+            'stop_error'            => 'Can not stop this process execution',
+            'pid_unlink_error'      => 'Can not delete main pid file. Exit',
+            'pid_disagree'          => 'Pid of process does not match. Exit',
             ''        => '',
             ''        => '',
             ''        => '',
@@ -216,7 +216,7 @@ class phpCron
      * Get shell command for execution
      *
      * @param string $string Shell script for execution
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function exec($string)
@@ -230,7 +230,7 @@ class phpCron
      * Get php script for execution
      *
      * @param function $callback Php function for execution
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function call($callback)
@@ -245,7 +245,7 @@ class phpCron
      * Set execution schedule in order to given string
      * 
      * @param string $string
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function cron($string = '* * * * * * *')
@@ -330,7 +330,7 @@ class phpCron
     /**
      * Set execution schedule at every second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everySeconds()
@@ -343,7 +343,7 @@ class phpCron
     /**
      * Set execution schedule at every five second 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyFiveSeconds()
@@ -356,7 +356,7 @@ class phpCron
     /**
      * Set execution schedule at every ten second 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyTenSeconds()
@@ -369,7 +369,7 @@ class phpCron
     /**
      * Set execution schedule at every thirty second 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyThirtySeconds()
@@ -382,7 +382,7 @@ class phpCron
     /**
      * Set execution schedule at every minute in 0 second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyMinute()
@@ -395,7 +395,7 @@ class phpCron
     /**
      * Set execution schedule at every five minute in 0 second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyFiveMinutes()
@@ -409,7 +409,7 @@ class phpCron
     /**
      * Set execution schedule at every ten minute in 0 second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyTenMinutes()
@@ -423,7 +423,7 @@ class phpCron
     /**
      * Set execution schedule at every thirty minute in 0 second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyThirtyMinutes()
@@ -438,7 +438,7 @@ class phpCron
      * Set execution schedule at every minute and certain second 
      * 
      * @param integer $sc Set certain second for execution in format SS
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function minutelyAt($sc)
@@ -451,7 +451,7 @@ class phpCron
     /**
      * Set execution schedule at every hour in 0 minute and 0 second
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function hourly()
@@ -467,7 +467,7 @@ class phpCron
      * 
      * @param string $mn_sc Set certain second and minute for execution 
      * in format MM:SS
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function hourlyAt($mn_sc)
@@ -489,7 +489,7 @@ class phpCron
     /**
      * Set execution schedule at every day in 00:00:00 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function daily()
@@ -506,7 +506,7 @@ class phpCron
      * 
      * @param string $hr_mn_sc Set certain second, minute and hour for execution 
      * in format HH:MM:SS
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function dailyAt($hr_mn_sc)
@@ -531,7 +531,7 @@ class phpCron
      * 
      * @param string $first_hr Set certain hour for execution at day in format HH
      * @param string $second_hr Set certain hour for execution at day in format HH
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function twiceDaily($first_hr, $second_hr)
@@ -546,7 +546,7 @@ class phpCron
     /**
      * Set execution schedule at every first day of month in 00:00:00 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function monthly()
@@ -566,7 +566,7 @@ class phpCron
      * in format DD
      * @param string $hr_mn_sc Set certain second, minute and hour for execution 
      * in format HH:MM:SS
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function monthlyOn($day_num, $hr_mn_sc)
@@ -590,7 +590,7 @@ class phpCron
     /**
      * Set execution schedule at first day of every second month in 00:00:00 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function everyTwoMonth()
@@ -607,7 +607,7 @@ class phpCron
     /**
      * Set execution schedule at first day of every third month in 00:00:00 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function quarterly()
@@ -624,7 +624,7 @@ class phpCron
     /**
      * Set execution schedule at every year in first day of january in 00:00:00 
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function yearly()
@@ -642,7 +642,7 @@ class phpCron
     /**
      * Set execution schedule at every working day
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function weekdays()
@@ -677,7 +677,7 @@ class phpCron
     /**
      * Set execution schedule at every sunday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function sundays()
@@ -696,7 +696,7 @@ class phpCron
     /**
      * Set execution schedule at every monday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function mondays()
@@ -715,7 +715,7 @@ class phpCron
     /**
      * Set execution schedule at every tuesday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function tuesdays()
@@ -734,7 +734,7 @@ class phpCron
     /**
      * Set execution schedule at every wednesday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function wednesdays()
@@ -753,7 +753,7 @@ class phpCron
     /**
      * Set execution schedule at every thursday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function thursdays()
@@ -772,7 +772,7 @@ class phpCron
     /**
      * Set execution schedule at every friday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function fridays()
@@ -791,7 +791,7 @@ class phpCron
     /**
      * Set execution schedule at every saturday
      * 
-     * @return self
+     * @return phpCron
      * @final
      */
     final public function saturdays()
@@ -812,7 +812,7 @@ class phpCron
      * 
      * @param string $start_time Begin of interval
      * @param string $end_time End of interval
-     * @return $this
+     * @return phpCron
      * @final
      */
     final public function between($start_time, $end_time)
@@ -832,7 +832,7 @@ class phpCron
      * 
      * @param string $start_time Begin of interval
      * @param string $end_time End of interval
-     * @return $this
+     * @return phpCron
      * @final
      */
     final public function unlessBetween ($start_time, $end_time)
@@ -851,7 +851,7 @@ class phpCron
      * Schedule a task if callback return true
      * 
      * @param callable $callback Callback functuin for check
-     * @return $this
+     * @return phpCron
      * @final
      */
     final public function when($callback)
@@ -865,10 +865,10 @@ class phpCron
      * Schedule a task if callback return false
      * 
      * @param callable $callback Callback functuin for check
-     * @return $this
+     * @return phpCron
      * @final
      */
-    public function skip($callback)
+    final public function skip($callback)
     {
         $this->tasks[$this->actual_id]['falsecheck'] = $callback;
                 
@@ -876,37 +876,87 @@ class phpCron
     }
 
     /**********         OPTIONS            **********/
-    public function withoutOverlapping(): self
+    
+    /**
+     * Changes option value in parameters list
+     * 
+     * @param string $parameter Parameter name
+     * @param any $value New parameter value
+     * @return phpCron
+     * @final
+     */
+    final public function setOption($parameter, $value)
     {
-        $this->options['queue'] = 'task';
+        $this->options[$parameter] = $value;
+
         return $this;
     }
 
-    public function withoutOverlappingAll($queue_no_double = false): self
+    /**
+     * Read and return option value
+     * @param string $parameter Parameter name
+     * @return any
+     * @final
+     */
+    final public function getOption($parameter)
     {
-        $this->options['queue'] = 'all';
-        $this->options['no_double'] = $queue_no_double;
-
+        return $this->options[$parameter];
+    }
+    
+    /**
+     * Set option 'queue' to 'task' value. It's mean that each tasks wait when
+     * previous running of this task will finish and it independent at others tasks
+     * 
+     * @return phpCron
+     * @final
+     */
+    final public function withoutOverlapping()
+    {
+        $this->setOption('queue', 'task');
         return $this;
     }
 
-    public function timezone(string $timezone): self    //NEED
+    /**
+     * Set option 'queue' to 'task' value. It's mean that each tasks wait when
+     * previous running of task from the common queue will finish
+     * 
+     * @param boolean $queue_no_double If queue already contents given task,
+     * task not add in queue
+     * @return phpCron
+     * @final
+     */
+    final public function withoutOverlappingAll($queue_no_double = false)
     {
-        // Пока тоже откладывается. date(U), как и DateTime временную зону не учитывает,
-        // нужно переделывать ключи, для учета временной зоны
-        $this->options['timezone'] = $timezone;
+        $this->setOption('queue', 'all');
+        $this->setOption('no_double', $queue_no_double);
+
         return $this;
     }
 
     /**
      * 
-     * 
-     * @param string $filename
-     * @return \self
+     * @param string $timezone
+     * @return phpCron
+     * @deprecated
      */
-    public function debugMe($filename = null)
+    public function timezone($timezone)
     {
-        $this->options['debug'] = true;
+        // Пока тоже откладывается. date(U), как и DateTime временную зону не учитывает,
+        // нужно переделывать ключи, для учета временной зоны
+        $this->setOption('timezone', $timezone);
+        return $this;
+    }
+
+    /**
+     * Turns phpCron in debug mode
+     * 
+     * @param string $filename Name of debug log file
+     * @return phpCron
+     * @final
+     */
+    final public function debugMe($filename = null)
+    {
+        $this->setOption('debug', true);
 
         if ($filename) {
             $this->debug_log_name = $filename;
@@ -914,6 +964,22 @@ class phpCron
         }
 
         return $this;
+    }
+    
+    /**
+     * 
+     * @param string $string
+     */
+    final public function saveDebug($message_id) {
+        if ($this->debug_log_name) {
+            file_put_contents (
+                $this->debug_log_name
+                , $this->message['alreay_running'] . PHP_EOL
+                , FILE_APPEND
+            );
+        } else {
+            echo $this->message['alreay_running'] . PHP_EOL;
+        }
     }
 
                         /**********         RESULT            **********/
@@ -958,72 +1024,77 @@ class phpCron
                             return $this;
                         }
 
-                        /**********         PROCESS            **********/
+    /**********         PROCESS            **********/
 
-                        /**
-                         * Start PhpCron via creating children process with the prohibition
-                         * of duplication
-                         * Checks the pid file exists and process running.
-                         * Deletes the pid file if the process not run.
-                         * Exit if PhpCron process running.
-                         * Parent process saves children pid before exit
-                         * Children process makes self a session leader and installs a signal handler
-                         *
-                         * @return self
-                         */
-                        public function start($show_schedule = false): self
-                        {
-                            if ($show_schedule) {
-                                echo print_r($this->tasks, true);
-                                echo print_r($this->schedule, true);
-                                exit();
-                            }
+    /**
+     * Start PhpCron via creating children process with the prohibition
+     * of duplication
+     * Checks the pid file exists and process running.
+     * Deletes the pid file if the process not run.
+     * Exit if PhpCron process running.
+     * Parent process saves children pid before exit
+     * Children process makes self a session leader and installs a signal handler
+     *
+     * @param boolean $show_schedule Returns schedule array instead execution
+     * @return phpCron
+     * @final
+     */
+    final public function start($show_schedule = false)
+    {
+        if ($show_schedule) {
+            echo print_r($this->tasks, true);
+            echo print_r($this->schedule, true);
+            exit(4);
+        }
 
-                            if (file_exists($this->pid_file_name)) {
-                                $pid = file_get_contents($this->pid_file_name);
+        if (file_exists($this->pid_file_name)) {
+            $pid = file_get_contents($this->pid_file_name);
 
-                                if (posix_kill((int) $pid, 0)) {
-                                    exit();
+            if (posix_kill((int) $pid, 0)) {
+                if ($this->getOption('debug')) $this->saveDebug('alreay_running');
+                exit(2);
+            } else {
+                if ($this->getOption('debug')) $this->saveDebug('stop_error');
+                if(!unlink($this->pid_file_name)) {
+                    if ($this->getOption('debug')) $this->saveDebug('pid_unlink_error');
+                    exit(3);
+                }
+            }
+        }
 
-                                } else {
-                                    if(!unlink($this->pid_file_name)) {
-                                        die();
-                                    }
-                                }
-                            }
+        $pid = pcntl_fork();
 
-                            declare(ticks = 1);
+        if ($pid == -1) {
+             exit(10);
+        } else if ($pid) {
+            $this->pid = $pid;
+            $this->pfile = fopen($this->pid_file_name, "wb");
+            file_get_contents ($this->pfile, $this->pid);
+            fclose($this->pfile);
+            exit(20);
+        }
 
-                            $pid = pcntl_fork();
+        // child process does not have time to lock the file
+        usleep(100000);
 
-                            if ($pid == -1) {
-                                 die();
-                            } else if ($pid) {
-                                $this->pid = $pid;
-                                $this->pfile = fopen($this->pid_file_name, "wb");
-                                fwrite ($this->pfile, $this->pid);
-                                exit();
-                            }
-                            // Родительский поток не успевает создать файл
-                            usleep(100000);
+        $this->pfile = fopen($this->pid_file_name, "rb");
+        $this->pid = fread($this->pfile, filesize($this->pid_file_name));
+        flock ($this->pfile, LOCK_EX);
 
-                            $this->pfile = fopen($this->pid_file_name, "rb");
-                            $this->pid = fread($this->pfile, filesize($this->pid_file_name));
-                            flock ($this->pfile, LOCK_EX);
+        $actual_pid = posix_setsid();
+        if ($actual_pid == -1 && $actual_pid != $this->pid) {
+            if ($this->getOption('debug')) $this->saveDebug('pid_disagree');
+            exit(5);
+        }
 
-                            $actual_pid = posix_setsid();
-                            if ($actual_pid == -1 && $actual_pid != $this->pid) {
-                                die();
-                            }
+        pcntl_signal(SIGHUP, array(&$this, "sigHandler"));
+        pcntl_signal(SIGTERM, array(&$this, "sigHandler"));
+        pcntl_signal(SIGCHLD, SIG_IGN); // kills zombie
 
-                            pcntl_signal(SIGHUP, array(&$this, "sigHandler"));
-                            pcntl_signal(SIGTERM, array(&$this, "sigHandler"));
-                            pcntl_signal(SIGCHLD, SIG_IGN); // избавляемся от зомби процессов
+        $this->listener();
 
-                            $this->listener();
-
-                            return $this;
-                        }
+        return $this;
+    }
 
                         /**
                          * Stop old PhpCron process and restart it once
@@ -1106,21 +1177,11 @@ class phpCron
 
                         /**********         OTHER            **********/
 
-                        public function setOption(string $parameter, $value): self
-                        {
-                            $this->options[$parameter] = $value;
 
-                            return $this;
-                        }
-
-                        public function getOption(string $parameter)
-                        {
-                            return $this->options[$parameter];
-                        }
 
                         public function getShedule()
                         {
-                            if ($this->options['isTest']) {
+                            if ($this->getOption('isTest')) {
                                 return $this->schedule;
                             }
 
@@ -1270,7 +1331,7 @@ class phpCron
                                     }
                                 }
 
-                                usleep(50000);
+                                usleep(5000000);
                             }
                         }
 
